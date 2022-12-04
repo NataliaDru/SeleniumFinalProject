@@ -1,5 +1,6 @@
 from .pages.product_page import ProductPage
 from .pages.locators import ProductPageLocators
+from .pages.basket_page import BasketPage
 import pytest
 import time
 
@@ -55,3 +56,13 @@ def test_guest_can_go_to_login_page_from_product_page(browser):
     page.open()
     page.go_to_login_page()
     time.sleep(5)
+
+
+# lesson 4.3.step 10
+def test_guest_cant_see_product_in_basket_opened_from_product_page(browser):
+    product_page = ProductPage(browser, product_base_link)
+    product_page.open()
+    product_page.go_to_shopping_cart()
+    shopping_cart_page = BasketPage(browser, browser.current_url)
+    shopping_cart_page.should_be_empty_shopping_cart()
+    shopping_cart_page.should_be_empty_shopping_cart_message()

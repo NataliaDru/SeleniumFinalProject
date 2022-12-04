@@ -22,3 +22,10 @@ class ProductPageLocators:
 class BasePageLocators:
     LOGIN_LINK = (By.CSS_SELECTOR, "#login_link")
     LOGIN_LINK_INVALID = (By.CSS_SELECTOR, "#login_link_inc")
+    SHOPPING_CART_LINK = (By.CSS_SELECTOR, '[href$="basket/"]')
+
+
+class BasketPageLocators:
+    SHOPPING_CART_STATUS = (By.CSS_SELECTOR, '#content_inner p')
+    LANGUAGE = (By.CSS_SELECTOR, "#content_inner a")
+    BASKET_ITEMS = (By.CLASS_NAME, "basket-items")
