@@ -1,6 +1,7 @@
 from .pages.product_page import ProductPage
 from .pages.locators import ProductPageLocators
 from .pages.basket_page import BasketPage
+from .pages.login_page import LoginPage
 import pytest
 import time
 
@@ -9,7 +10,6 @@ links = [f"{product_base_link}/?promo=offer{no}" if no != 7 else pytest.param("b
     reason="Bug in product name")) for no in range(10)]
 
 
-@pytest.mark.skip
 @pytest.mark.parametrize('link', links)
 def test_guest_can_add_product_to_basket(browser, link):
     page = ProductPage(browser, link)
@@ -29,18 +29,18 @@ def test_guest_cant_see_success_message_after_adding_product_to_basket(browser):
     page.should_not_be_success_message()
 
 
-def test_guest_cant_see_success_message(browser):
-    page = ProductPage(browser, product_base_link)
-    page.open()
-    page.should_not_be_success_message()
-
-
 @pytest.mark.xfail(reason="Success message is not disappeared")
 def test_message_disappeared_after_adding_product_to_basket(browser):
     page = ProductPage(browser, product_base_link)
     page.open()
     page.add_to_basket()
     page.should_be_disappeared_success_message()
+
+
+def test_guest_cant_see_success_message(browser):
+    page = ProductPage(browser, product_base_link)
+    page.open()
+    page.should_not_be_success_message()
 
 
 def test_guest_should_see_login_link_on_product_page(browser):
@@ -66,3 +66,31 @@ def test_guest_cant_see_product_in_basket_opened_from_product_page(browser):
     shopping_cart_page = BasketPage(browser, browser.current_url)
     shopping_cart_page.should_be_empty_shopping_cart()
     shopping_cart_page.should_be_empty_shopping_cart_message()
+
+
+# практика группировки тестов и setup
+@pytest.mark.register_new_user
+class TestUserAddToBasketFromProductPage:
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(self, browser):
+        self.product_page = ProductPage(browser, product_base_link)
+        self.product_page.open()
+        self.product_page.go_to_login_page()
+        self.login_page = LoginPage(browser, browser.current_url)
+        email = str(time.time()) + "@fakemail.org"
+        self.login_page.register_new_user(email=email, password="hard_password123")
+        self.login_page.should_be_authorized_user()
+
+    def test_user_cant_see_success_message(self, browser):
+        page = ProductPage(browser, product_base_link)
+        page.open()
+        page.should_not_be_success_message()
+
+    def test_user_can_add_product_to_basket(self, browser):
+        page = ProductPage(browser, product_base_link)
+        page.open()
+        product_name = browser.find_element(*ProductPageLocators.PRODUCT_NAME).text
+        product_price = browser.find_element(*ProductPageLocators.PRODUCT_PRICE).text
+        page.add_to_basket()
+        # page.solve_quiz_and_get_code()
+        page.should_add_to_basket(product_name, product_price)
